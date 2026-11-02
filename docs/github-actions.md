@@ -38,8 +38,8 @@ part of writing these files.
 ## Daily refresh
 
 GitHub targets 06:00 Israel time, including DST. Python independently checks the
-local time: starts within 06:00–06:59 report their startup delay; earlier starts
-skip, and starts from 07:00 onward fail as missed without opening a DB connection.
+local time: starts from 06:00 onward are permitted, with a warning reporting
+startup delay for late catch-ups. Earlier starts skip without opening a DB connection.
 There is no automatic historical backfill or guaranteed exact-minute delivery.
 
 The scheduler reserves all nine active chains and inserts one unique local-date

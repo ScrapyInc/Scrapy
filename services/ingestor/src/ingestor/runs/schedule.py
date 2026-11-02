@@ -33,11 +33,9 @@ def schedule_decision(now: datetime) -> ScheduleDecision:
     delay = int((local - target).total_seconds())
     if local.hour < 6:
         reason = "BEFORE_WINDOW"
-    elif local.hour > 6:
-        reason = "MISSED_WINDOW"
     else:
         reason = "READY" if delay == 0 else "DELAYED"
-    return ScheduleDecision(local.date(), local.hour == 6, reason, max(0, delay))
+    return ScheduleDecision(local.date(), local.hour >= 6, reason, max(0, delay))
 
 
 def run_scheduled(
@@ -68,9 +66,9 @@ def run_scheduled(
         )
         if not decision.permitted:
             logger.warn(
-                "schedule.skipped", "Invocation outside the scheduled hour", reason=decision.reason
+                "schedule.skipped", "Invocation before the scheduled time", reason=decision.reason
             )
-            return 1 if decision.reason == "MISSED_WINDOW" else 0
+            return 0
         if decision.reason == "DELAYED":
             logger.warn("schedule.delayed", "Scheduled refresh starting after its target time")
         with connection_factory() as connection:

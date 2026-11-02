@@ -30,9 +30,8 @@ Pilot success proves source collection, parsing and aggregation, not publication
 
 After source evidence and credential review, the refresh workflow must be
 reviewed/merged to the default branch to activate its daily schedule and normal
-manual UI. The schedule starts at 06:00 Asia/Jerusalem; 06:00–06:59 invocations
-may start with delay reported. Earlier/duplicate invocations skip; later starts
-fail without database admission. Carrefour stays disabled.
+manual UI. The schedule targets 06:00 Asia/Jerusalem; later invocations proceed
+with a warning reporting their delay. Earlier/duplicate invocations skip. Carrefour stays disabled.
 
 Manual full refresh: open Actions > Supermarket refresh > Run workflow, choose
 mode=refresh, leave run_id blank, and click Run workflow. The runner atomically

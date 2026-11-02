@@ -22,16 +22,16 @@ def test_six_am_israel_gate_tracks_both_dst_offsets_and_transitions(stamp):
 
 
 @pytest.mark.parametrize(
-    "stamp,reason",
+    "stamp,permitted,reason",
     [
-        ("2026-01-15T03:00:00", "BEFORE_WINDOW"),
-        ("2026-07-15T04:00:00", "MISSED_WINDOW"),
-        ("2026-01-15T05:00:00", "MISSED_WINDOW"),
+        ("2026-01-15T03:00:00", False, "BEFORE_WINDOW"),
+        ("2026-07-15T04:00:00", True, "DELAYED"),
+        ("2026-01-15T05:00:00", True, "DELAYED"),
     ],
 )
-def test_wrong_or_missed_hour_never_admits_current_day(stamp, reason):
+def test_early_starts_skip_and_late_starts_allow_catch_up(stamp, permitted, reason):
     result = schedule_decision(datetime.fromisoformat(stamp).replace(tzinfo=UTC))
-    assert not result.permitted and result.reason == reason
+    assert result.permitted == permitted and result.reason == reason
 
 
 def test_startup_delay_is_reported_within_the_six_am_window():
@@ -45,7 +45,7 @@ def test_local_date_is_used_across_utc_midnight_and_naive_time_is_rejected():
         schedule_decision(datetime(2026, 7, 15, 6))
 
 
-@pytest.mark.parametrize("hour,expected", [(2, 0), (4, 1)])
+@pytest.mark.parametrize("hour,expected", [(2, 0)])
 def test_outside_window_never_opens_connections(hour, expected):
     from ingestor.config import load_settings
     from ingestor.logging import create_logger
