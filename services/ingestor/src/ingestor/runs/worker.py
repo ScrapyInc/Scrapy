@@ -18,7 +18,7 @@ from ..providers.stream import SourceError
 from ..providers.types import Provider
 from ..repository.ownership import claim_run, heartbeat
 from ..repository.publication import publish_collection, start_chain
-from ..repository.recovery import failed_chains, finish_run, prune_runs
+from ..repository.recovery import failed_chains, finish_run, prune_runs, successful_chains
 from .ownership import LeaseGuard, OwnershipError
 
 type ConnectionFactory = Callable[[], psycopg.Connection]
@@ -96,6 +96,7 @@ def run_worker(
     cancelled = Event() if cancelled is None else cancelled
     started, owner = clock(), None
     chain_failures = ()
+    chain_successes = ()
     if not (
         0 < settings.heartbeat_seconds < settings.run_lease_seconds <= 300
         and 0 < settings.run_timeout_minutes <= 45
@@ -214,6 +215,7 @@ def run_worker(
                     check()
                     status = finish_run(connection, owner)
                     chain_failures = failed_chains(connection, owner.run_id)
+                    chain_successes = successful_chains(connection, owner.run_id)
             try:
                 pruned = prune_runs(connection)
                 logger.info(
@@ -229,6 +231,8 @@ def run_worker(
             status=status,
             failed_chain_count=len(chain_failures),
             failed_chains=_failure_summary(chain_failures),
+            successful_chain_count=len(chain_successes),
+            successful_chains=list(chain_successes),
             duration_ms=round((clock() - started) * 1000),
         )
         return 0 if status == "SUCCEEDED" else 1
@@ -254,12 +258,15 @@ def run_worker(
                 with connection_factory() as cleanup:
                     status = finish_run(cleanup, owner, abort=True)
                     chain_failures = failed_chains(cleanup, owner.run_id)
+                    chain_successes = successful_chains(cleanup, owner.run_id)
                 logger.info(
                     "run.teardown_finished",
                     "Unfinished chains finalized",
                     status=status,
                     failed_chain_count=len(chain_failures),
                     failed_chains=_failure_summary(chain_failures),
+                    successful_chain_count=len(chain_successes),
+                    successful_chains=list(chain_successes),
                 )
             except Exception as cleanup_error:
                 logger.error(

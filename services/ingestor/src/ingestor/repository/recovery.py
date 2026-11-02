@@ -156,6 +156,19 @@ def failed_chains(
     )
 
 
+def successful_chains(connection: psycopg.Connection, run_id: UUID) -> tuple[str, ...]:
+    """Return successfully published chain IDs in stable order."""
+    _require_idle(connection)
+    return tuple(
+        row[0]
+        for row in connection.execute(
+            "SELECT chain_id FROM public.refresh_run_chains "
+            "WHERE run_id=%s AND status='SUCCEEDED' ORDER BY chain_id",
+            (run_id,),
+        ).fetchall()
+    )
+
+
 def finish_run(connection: psycopg.Connection, owner: RunOwnership, *, abort: bool = False) -> str:
     """Finalize committed outcomes, or fail only unfinished chains during teardown.
 
