@@ -30,13 +30,13 @@ def schedule_decision(now: datetime) -> ScheduleDecision:
     if not isinstance(now, datetime) or now.utcoffset() is None:
         raise ScheduleError("INVALID_SCHEDULE_TIME")
     local = now.astimezone(ZoneInfo("Asia/Jerusalem"))
-    target = local.replace(hour=6, minute=0, second=0, microsecond=0)
+    target = local.replace(hour=1, minute=0, second=0, microsecond=0)
     delay = int((local - target).total_seconds())
-    if local.hour < 6:
+    if local.hour < 1:
         reason = "BEFORE_WINDOW"
     else:
         reason = "READY" if delay == 0 else "DELAYED"
-    return ScheduleDecision(local.date(), local.hour >= 6, reason, max(0, delay))
+    return ScheduleDecision(local.date(), local.hour >= 1, reason, max(0, delay))
 
 
 def run_scheduled(

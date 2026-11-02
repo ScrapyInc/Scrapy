@@ -1,7 +1,7 @@
 # GitHub Actions operation
 
 The repository contains two workflows. CI runs on pushes, pull requests and
-manual dispatch. Refresh runs on the native `0 6 * * *` schedule with
+manual dispatch. Refresh runs on the native `0 1 * * *` schedule with
 `timezone: Asia/Jerusalem`, or manual dispatch. Jobs use standard GitHub-hosted
 Ubuntu 24.04 runners, Python 3.12.16, uv 0.13.6 and the committed dependency lock.
 There is no always-on worker/server or workflow-global concurrency cancellation.
@@ -37,8 +37,8 @@ part of writing these files.
 
 ## Daily refresh
 
-GitHub targets 06:00 Israel time, including DST. Python independently checks the
-local time: starts from 06:00 onward are permitted, with a warning reporting
+GitHub targets 01:00 Israel time, including DST. Python independently checks the
+local time: starts from 01:00 onward are permitted, with a warning reporting
 startup delay for late catch-ups. Earlier starts skip without opening a DB connection.
 There is no automatic historical backfill or guaranteed exact-minute delivery.
 

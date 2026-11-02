@@ -78,9 +78,9 @@ wired to live adapters and direct DATABASE_URL sessions. It consumes an existing
 PENDING run admitted by the control library; it never creates authorization from
 a newly invented UUID or takes a chain/URL override. GITHUB_RUN_ID is required,
 with GITHUB_RUN_ATTEMPT defaulting to 1. Actions supplies these in hosted execution.
-`scheduled` permits starts from 06:00 Israel time onward, claims the local date once,
+`scheduled` permits starts from 01:00 Israel time onward, claims the local date once,
 reserves the active chain set atomically, then runs the worker. Late starts proceed
-with a warning reporting their delay; starts before 06:00 skip. Refresh
+with a warning reporting their delay; starts before 01:00 skip. Refresh
 is an explicit network/database mutation command; check-config remains
 connection-free. A real Supabase refresh has not been run during implementation.
 
@@ -210,7 +210,7 @@ the variable without echoing its value; argument errors also withhold raw input.
 
 ## GitHub Actions
 
-[Workflow operation and setup](docs/github-actions.md) explains daily 06:00 Israel
+[Workflow operation and setup](docs/github-actions.md) explains daily 01:00 Israel
 refreshes, authorized manual run IDs, source-only probes and CI isolation. Add
 the repository secret `DATABASE_URL`; no `.env` file is used or uploaded. CI
 receives only a disposable local test database, never the production secret.
