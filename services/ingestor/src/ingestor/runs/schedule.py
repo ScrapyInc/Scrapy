@@ -8,6 +8,7 @@ from zoneinfo import ZoneInfo
 
 from ..config import Settings
 from ..logging.types import Logger
+from ..repository.admission import available_refresh_chains
 from ..repository.schedule import claim_daily_run
 from .admission import AdmissionError
 from .worker import ConnectionFactory, ProviderFactory, run_worker
@@ -72,8 +73,12 @@ def run_scheduled(
         if decision.reason == "DELAYED":
             logger.warn("schedule.delayed", "Scheduled refresh starting after its target time")
         with connection_factory() as connection:
+            chains = available_refresh_chains(connection, settings.enabled_chains, logger=logger)
+            if not chains:
+                logger.warn("schedule.skipped", "No enabled requested chains to refresh")
+                return 0
             result = claim_daily_run(
-                connection, decision.local_date, settings.enabled_chains, execution_id=execution_id
+                connection, decision.local_date, chains, execution_id=execution_id
             )
         if result.outcome == "ALREADY_CLAIMED":
             logger.info(
@@ -94,7 +99,7 @@ def run_scheduled(
             "schedule.admitted",
             "Daily refresh reserved",
             run_id=str(result.run_id),
-            chain_count=len(settings.enabled_chains),
+            chain_count=len(chains),
         )
         return run_worker(
             result.run_id,

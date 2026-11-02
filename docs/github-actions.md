@@ -42,7 +42,13 @@ local time: starts from 06:00 onward are permitted, with a warning reporting
 startup delay for late catch-ups. Earlier starts skip without opening a DB connection.
 There is no automatic historical backfill or guaranteed exact-minute delivery.
 
-The scheduler reserves all nine active chains and inserts one unique local-date
+Manual full refreshes and scheduled refreshes skip requested chains that are
+missing or disabled in the database, logging `run.chain_skipped` with each chain
+ID. If none remain, they log a warning and exit successfully without creating a
+run or daily claim. Existing admitted run IDs retain their original chain set.
+Admission still validates the selected chains and reserves them atomically.
+
+The scheduler reserves the remaining enabled chains and inserts one unique local-date
 claim in the same transaction. A duplicate skips. Any existing chain reservation
 causes a durable failed scheduled run with SCHEDULE_CONFLICT and no partial new
 reservations. The daily claim remains consumed; recovery is an explicit manual

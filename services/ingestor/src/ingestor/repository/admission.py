@@ -7,6 +7,7 @@ import psycopg
 from psycopg.pq import TransactionStatus
 
 from ..chains import CHAINS
+from ..logging.types import Logger
 from ..runs.admission import AdmissionError, AdmittedRun, validate_request
 from .recovery import reconcile_for_admission
 
@@ -22,6 +23,30 @@ def _require_idle(connection: psycopg.Connection) -> None:
 def _timeouts(connection: psycopg.Connection) -> None:
     connection.execute("SET LOCAL lock_timeout = '5s'")
     connection.execute("SET LOCAL statement_timeout = '15s'")
+
+
+def available_refresh_chains(
+    connection: psycopg.Connection,
+    chains: tuple[str, ...],
+    *,
+    logger: Logger,
+) -> tuple[str, ...]:
+    """Filter known requested chains against the database before refresh admission."""
+    chains = validate_request(chains, "MANUAL")
+    available = connection.execute(
+        "SELECT id FROM public.chains WHERE id=ANY(%s) AND enabled ORDER BY id",
+        (list(chains),),
+    ).fetchall()
+    selected = tuple(row[0] for row in available)
+    for chain in chains:
+        if chain not in selected:
+            logger.warn(
+                "run.chain_skipped",
+                "Requested chain is missing or disabled in the database",
+                chain_id=chain,
+                reason="MISSING_OR_DISABLED",
+            )
+    return selected
 
 
 def admit_run(
